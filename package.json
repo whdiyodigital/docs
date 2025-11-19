@@ -1,0 +1,9 @@
+{
+  "name": "whdiyo.dsm.doc",
+  "scripts": {
+    "dev": "mint dev"
+  },
+  "devDependencies": {
+    "mint": "4.2.187"
+  }
+}

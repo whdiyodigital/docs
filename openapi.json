@@ -1,0 +1,558 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "WhdiYo DSM API",
+    "description": "WhDiYo Dynamic Stream Manipulation (DSM) Service API",
+    "contact": {
+      "name": "Adam",
+      "url": "",
+      "email": "adam@whdiyo.com"
+    },
+    "termsOfService": "",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://api.dsm.whdiyo.com/api/v1/",
+      "description": ""
+    }
+  ],
+  "security": [
+    {
+      "dsm_auth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "dsm_auth": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "http://api.dsm.whdiyo.com/api/v1/oauth/token",
+            "scopes": {
+              "media": "management media",
+              "template": "management the watermark settings",
+              "stream": "create unique streaming url for playback"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorModel": {
+        "description": "Error model",
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "The error type",
+            "type": "string"
+          },
+          "message": {
+            "description": "The error message",
+            "type": "string"
+          }
+        }
+      },
+      "ValidationErrorModel": {
+        "description": "Validation Error model",
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "The error type",
+            "type": "string"
+          },
+          "fields": {
+            "description": "The fields validation failed error message",
+            "type": "object"
+          }
+        }
+      },
+      "IdModel": {
+        "description": "Id model",
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "System identifier",
+            "type": "string"
+          }
+        }
+      },
+      "StreamDetectedInfoModel": {
+        "description": "Media stream detected parameters type",
+        "type": "object",
+        "properties": {
+          "streamUrl": {
+            "description": "The request stream url for detect",
+            "type": "string"
+          },
+          "format": {
+            "description": "The media type dash or hls",
+            "type": "string",
+            "enum": [
+              "dash",
+              "hls"
+            ]
+          },
+          "duration": {
+            "description": "float",
+            "type": "number",
+            "format": "The media duration"
+          },
+          "segmentDuration": {
+            "description": "float",
+            "type": "number",
+            "format": "The video segment duration. 2 2.02 6"
+          },
+          "timescale": {
+            "description": "int64",
+            "type": "integer",
+            "format": "The DASH segments duration time scale. in AMS used default value 10000000"
+          },
+          "drm": {
+            "description": "The DRM media have DRM protection",
+            "type": "boolean",
+            "format": "boolean"
+          },
+          "kid": {
+            "description": "The DRM media KID",
+            "type": "string"
+          },
+          "pssh": {
+            "description": "The DRM media MPEG-CENC (Widevine) PSSH box. DASH only",
+            "type": "string"
+          },
+          "licenseUrl": {
+            "description": "The DRM media license URL. DASH only",
+            "type": "string"
+          }
+        }
+      },
+      "BasicMediaModel": {
+        "description": "Basic Media model",
+        "type": "object",
+        "properties": {
+          "alternateId": {
+            "description": "A friendly identifier for your media",
+            "type": "string"
+          },
+          "title": {
+            "description": "The media title",
+            "type": "string"
+          },
+          "duration": {
+            "description": "float",
+            "type": "number",
+            "format": "The media duration in seconds"
+          }
+        }
+      },
+      "StreamModel": {
+        "description": "Stream model",
+        "required": [
+          "format",
+          "url",
+          "segmentDuration",
+          "timescale"
+        ],
+        "type": "object",
+        "properties": {
+          "format": {
+            "description": "The stream format",
+            "type": "string",
+            "enum": [
+              "dash",
+              "hls"
+            ]
+          },
+          "url": {
+            "description": "The media streaming ( manifest ) url",
+            "type": "string"
+          },
+          "segmentDuration": {
+            "description": "float",
+            "type": "number",
+            "format": "The segment duration in seconds"
+          },
+          "timescale": {
+            "description": "int64",
+            "type": "integer",
+            "format": "The segments duration time scale. in AMS used default value 10000000"
+          },
+          "drm": {
+            "description": "The media have DRM protection",
+            "type": "boolean",
+            "format": "boolean"
+          },
+          "kid": {
+            "description": "The media DRM KID",
+            "type": "string"
+          },
+          "pssh": {
+            "description": "The media DRM Widevine PSSH data ( dash only )",
+            "type": "string"
+          }
+        }
+      },
+      "StreamCreateModel": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/StreamModel"
+          }
+        ],
+        "description": "Stream Create model",
+        "type": "object",
+        "properties": {
+          "clearKey": {
+            "description": "The media DRM secret plain value ( in Azure AMSExplorer called it clear key). base64",
+            "type": "string"
+          }
+        }
+      },
+      "MediaModel": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BasicMediaModel"
+          }
+        ],
+        "description": "Media model",
+        "type": "object",
+        "properties": {
+          "streams": {
+            "description": "The dash hls stream for the media",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StreamModel"
+            }
+          }
+        }
+      },
+      "MediaCreateModel": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BasicMediaModel"
+          }
+        ],
+        "description": "Media Create model",
+        "type": "object",
+        "properties": {
+          "streams": {
+            "description": "The dash hls stream for the media",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StreamCreateModel"
+            }
+          }
+        }
+      },
+      "MediaResponseModel": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/IdModel"
+          },
+          {
+            "$ref": "#/components/schemas/MediaModel"
+          }
+        ],
+        "description": "Media Response model",
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  "paths": {
+    "/media/detect": {
+      "post": {
+        "deprecated": false,
+        "summary": "Detect media stream parameters.",
+        "security": [
+          {
+            "dsm_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "$ref": "#/components/schemas/StreamDetectedInfoModel"
+                },
+                "examples": {
+                  "example1": {
+                    "summary": "dash success response example",
+                    "value": {
+                      "streamUrl": "https://cdn.bitmovin.com/content/assets/art-of-motion-dash-hls-progressive/mpds/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.mpd",
+                      "duration": 210,
+                      "segmentDuration": 4,
+                      "timescale": 25000,
+                      "format": "dash"
+                    }
+                  },
+                  "example2": {
+                    "summary": "hls success response example",
+                    "value": {
+                      "streamUrl": "https://cdn.bitmovin.com/content/assets/art-of-motion-dash-hls-progressive/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8",
+                      "duration": 210,
+                      "segmentDuration": 4,
+                      "format": "hls"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          }
+        },
+        "parameters": [],
+        "tags": [
+          "media"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DetectRequestModel"
+              },
+              "examples": {
+                "example1": {
+                  "summary": "dash payload example",
+                  "value": "{ \"streamUrl\": \"https://cdn.bitmovin.com/content/assets/art-of-motion-dash-hls-progressive/mpds/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.mpd\" }"
+                },
+                "example2": {
+                  "summary": "hls payload example",
+                  "value": "{ \"streamUrl\": \"https://cdn.bitmovin.com/content/assets/art-of-motion-dash-hls-progressive/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8\" }"
+                }
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        }
+      }
+    },
+    "/media": {
+      "get": {
+        "deprecated": false,
+        "summary": "Query media list",
+        "security": [
+          {
+            "dsm_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaResponseModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "500": {
+            "description": "failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "tags": [
+          "media"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "summary": "Add media",
+        "security": [
+          {
+            "dsm_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponseModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "422": {
+            "description": "validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorModel"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [],
+        "tags": [
+          "media"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaCreateModel"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        }
+      }
+    },
+    "/media/{id}": {
+      "get": {
+        "deprecated": false,
+        "summary": "Query media by id or alternateId",
+        "security": [
+          {
+            "dsm_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponseModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "422": {
+            "description": "validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorModel"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "deprecated": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      },
+      "delete": {
+        "deprecated": false,
+        "summary": "Remove media by id or alternateId",
+        "security": [
+          {
+            "dsm_auth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "success response"
+          },
+          "401": {
+            "description": "unauthorized"
+          },
+          "422": {
+            "description": "validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorModel"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "deprecated": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "media",
+      "description": ""
+    }
+  ]
+}
